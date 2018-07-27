@@ -1,0 +1,125 @@
+/*
+    The main client program that implements the functionality of the string task program
+*/
+#include "client.h"
+
+char buffer[BUFFER_SIZE];       //the buffer onto which to write the request and reply
+
+SocketAddress client_soc_addr;                  //the socket address of the client
+SocketAddress server_soc_addr;                  //the socket address for the server
+
+int snder_length = sizeof(client_soc_addr);     //the size of the client socket address
+int client_socket;                              //client's socket file descriptor
+const char *terminal_string;                   //string typed at the terminal
+
+int main(int argc, char const *argv[])
+{
+
+    /* check if the arguments are passed correctly */
+    if(argc <= 1){
+        NEW_LINE;
+        print_msg(ERROR, "Usage> name_of_cleint host_name");
+        exit(EXIT_FAILURE);         //exit the program if the host name is not specifed
+    }
+    //if the destination / host is provided then run the client
+    else if(argc == 2){
+        /* do what you want here */
+       client_run(argv); 
+    }
+    else {
+        NEW_LINE;
+        print_msg(ERROR,"Usage> name_of_client host_name");
+        print_msg("HELP", "run the client by putting the name of the server machine as an argument.");
+    }
+    return 0;
+}
+
+//function to  run the main client program 
+void client_run(const char **args){
+
+    printf(" Initializing String Task client......");
+    NEW_LINE;
+    /****create the client socket file descriptor */
+    print_msg(MESSAGE, "Creating client socket..........");
+    if((client_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        print_msg("SOCKET_ERROR", "Could not create client socket.");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+    print_msg("SUCCESS", "Client socket created successfully");
+
+    /* prepare the socket address in structure for the receiver / server */
+    memset((char *)&server_soc_addr, 0, sizeof(server_soc_addr));
+    prepare_destination_socket_address(&server_soc_addr, (char *)args[1], DEFAULT_PORT);
+    print_socket_address(server_soc_addr,"Destination's socket address");
+
+    /* connect to the server */
+    if(connect(client_socket, (struct sockaddr *)&server_soc_addr, sizeof(struct sockaddr)) == -1){
+        print_msg("CONNECTION ERROR", "Failed to connect to remeote server");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+    /* send and receive once the connection is established */
+    terminal_string = malloc(BUFFER_SIZE);     //allocate memory to the input string at the terminal
+    
+    while(true){
+        
+        /* print prompt and get user input*/
+        terminal_string = prompt((char *)terminal_string);
+
+        if(terminal_string == NULL){
+            print_msg(UNKNOWN_COMMAND, (char *)terminal_string);
+            continue;
+        }
+        
+        else if (strncmp(terminal_string, "help", 4) == 0)
+        {
+            /* print help menu */
+            printf("in help, not yet implementsed");NEW_LINE;
+        }
+        
+        else if (strncmp(terminal_string, "exit", 4) == 0)
+        {
+            /* tell the server first before you go away */
+            if(send(client_socket,terminal_string, sizeof(buffer), 0) == -1){
+                print_msg(ERROR, "it seems the server is off");
+            }
+            /* exit the program */
+            NEW_LINE;
+            print_msg("CLIENT CLOSED","Bye.....");
+            close(client_socket);           //close the client socket file descripter
+            exit(EXIT_SUCCESS);             //exit the program
+        }
+        else{
+            /*user can now exechange with the server*/
+            //#########################################
+            if(send(client_socket,terminal_string, sizeof(buffer), 0) == -1){
+                print_msg(SEND_FAILURE, "Failed to send the previous packet to the server");
+                continue;
+            }
+            print_msg("SEND SUCCESS", "Message sent to the server");
+
+            //receive
+            //print reply
+
+        }
+    }
+    free((char *)terminal_string);      //free the memory allocated to terminal string
+    close(client_socket);
+}
+
+//function to prompt the user to enter the string from the terminal
+const char *prompt(char buff[]){
+    NEW_LINE;
+    printf(" Enter a command> ");
+    fgets(buff, 1000, stdin);
+    NEW_LINE;
+    buff = strtok(buff, "\n");  //remove the new line character which is appended implicitly by the fgets() function
+
+    return (const char *)buff;
+}
+
+//function to interprete the commands typed by the client from the prompt
+void command_interpretor(char *command){
+
+}

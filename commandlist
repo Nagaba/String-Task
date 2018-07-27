@@ -1,0 +1,25 @@
+//command set (acceptable tasks)
+double <word>;
+reverse <word>;
+delete <word> <posn1, posn2,......, posnn>;
+replace <word>  <posn1-char1, posn2-char2, ...... posnn-charn>;
+encrypt <word>;
+decrypt <word>;
+
+
+
+//the format of the request message having more than on task
+<task1;task2;.................taskn> 
+    e.g 
+    double sara;reverse chair;delete house 1,2,3;replace boy 1-p,2-g;encrypt doop
+
+//the format of the response message
+/*
+    *the format of the response message
+    <task_id> <task> <word> is <result>;<task_id> <task> <word> is <result>;........{up to nth task}
+        where;
+            task_id: is the task identifier
+            task:    is the command eg double, reverse, delete etc in the command set
+            word:    is the word  onto which the task is to be performed
+            result:  is the result after performing the task
+*/
