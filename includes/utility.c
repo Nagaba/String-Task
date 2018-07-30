@@ -63,6 +63,40 @@ void print_msg(char *type, char *msg){
     NEW_LINE;
 }
 
+/*
+	function to swap two integers
+	it takes two pointers to integers and interchanges them i.e 'from' is set 'to' and 'to' is set to 'from'
+*/
+void swap(int *from, int *to){
+	int temp;			//temporary holder for the value to be swapped
+	temp = *from;
+	*from = *to;
+	*to = temp;
+}
+
+/*
+	function to sort an array of integers in ascending order (bubble sort)
+	it takes an array of integers before sorting
+	it returns the array after sorting in ascending order
+*/
+int *sort_positions(int positions_array[], int size_){
+
+	int outer_counter;		//passes through the positions_array[]
+	int swap_counter;		//for comparing and swapping any two positions
+
+	for(outer_counter = 0; outer_counter < size_; ++outer_counter){	//go through the entire positions_array
+
+		for(swap_counter = 0; swap_counter < size_; ++swap_counter){
+
+			if(positions_array[swap_counter] > positions_array[outer_counter]){
+				swap(&positions_array[swap_counter], &positions_array[outer_counter]);	//swap the two numbers if the next value in the positions_array is greater than the previous
+			}
+		}
+	}
+	return positions_array;
+}
+
+
 
 /*
     Function to double the string 'str'

@@ -16,6 +16,7 @@
 #define SOCKET_ERROR "SOCKET ERROR"         //the socket error macro
 #define RECIEVE_FAILURE "RECEIVE FAILURE"   //receive failure macro
 
+
 /* 
     function to handle the signal incase of new incoming  connections
     it takes the socket file descripter attempting to connect
@@ -40,11 +41,30 @@ char *process_task(char *task, char *result, int task_id);
     Function to pakage the result obtained after processing the task in 
     the format that the client understands.
 */
-char *package_result(char *result, char *msg, int task_id);
+char *package_result(int task_id, char *task, char *result, char buffer[]);
+
+/*
+    Function to pakage the error obtained after processing the task and 
+    identifies an error in the command, in the format that the client understands.
+*/
+char *package_error(char *error, int task_id, char *err_msg, char buffer[]);
 
 /*
     Function to service the client's requests
 */
-char *service_client(char *request, char reply[]);
+char *service_client(char *tasks[]);
 
+/*
+    Function to extract the individual tasks from request message sent to the server
+*/
+void extract_tasks(char *request, char *tasks[]);
+
+/*
+    Function to joint two strings
+*/
+char *join_strings(char dest[], char src[]);
+/*to be romoved. just for debugging*/
+void debug(void){
+    print_msg("DEBUG", "failed");
+}
 #endif

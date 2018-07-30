@@ -27,7 +27,8 @@
 #define SEND_FAILURE "SEND FAILURE"         //send failure macro
 #define RECV_FAILURE "RECEIVE FAILURE"      //receive failure macro
 #define SEPARATOR ";"                       //the command separator macro
-
+#define FEW_ARGS "FEW ARGUMENTS"            //the few arguments macro
+#define WRONG_ARGS "WRONG ARGUMENTS"        //the wrong arguments macro
 
 
 typedef struct sockaddr_in SocketAddress;       //structure to represent socket address structure
@@ -38,6 +39,27 @@ void load_buffer(const char *str);
 //function to pring a message to the terminal 'type' spsecifies the message category
 void print_msg(char *type, char *msg);
 
+/*
+    function to check if the entered string is a number, it looks at each character in the string entered, 
+    when it encounters a character that is not a number, it returns 0 (false)
+    it takes a string 'str' to be checked if it is a number
+    it returns 1(true) if all the characters in the string are numbers or 0 (false) if at least one of the characters in the string 
+    is not a number
+*/
+int is_anumber(char *str);
+
+/*
+	function to sort an array of integers in ascending order (bubble sort)
+	it takes an array of integers before sorting
+	it returns the array after sorting in ascending order
+*/
+int *sort_positions(int positions_array[], int size_);
+
+/*
+	function to swap two integers
+	it takes two pointers to integers and interchanges them i.e 'from' is set 'to' and 'to' is set to 'from'
+*/
+void swap(int *from, int *to);
 
 /*
     function to print the socket address
@@ -90,9 +112,8 @@ char *string_delete(char *str, int positions[], int size);
 
 /*
     Function to encrypt a word
-*/
 
-/*
+
     Helper Function: gets the letter value it corresponds to eg a = 1
     This function is used by the string_encrypt()
 */
