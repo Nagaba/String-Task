@@ -75,7 +75,7 @@ void client_run(const char **args){
         else if (strncmp(terminal_string, "help", 4) == 0)
         {
             /* print help menu */
-            printf("in help, not yet implementsed");NEW_LINE;
+            print_help();
         }
         
         else if (strncmp(terminal_string, "exit", 4) == 0)
@@ -119,7 +119,26 @@ const char *prompt(char buff[]){
     return (const char *)buff;
 }
 
-//function to interprete the commands typed by the client from the prompt
-void command_interpretor(char *command){
+/*
+    Function to print the help menu showing the list of permitted commands 
+    the string Task program can accept
+*/
+void print_help(void){
+    NEW_LINE
+    print_msg("#","************************************ HELP *************************************#");
+    printf("  below is the list of supported commands, the words in < and > are any arguments\n");
+    print_msg(" tasks","the permited tasks are;");NEW_LINE;
+    print_msg(" DOUBLE"," double <word>;");
+    print_msg(" REVERSE", "reverse <word>;");
+    print_msg(" ENCRYPT", "encrypt <word>;");
+    print_msg(" DECRYPT", "decrypt <word>;");
+    print_msg(" DELETE", " delete <word> <posn1, posn2,......, posnn>;");
+    print_msg(" REPLACE", "replace <word>  <posn1-char1, posn2-char2,.....,posnn-charn>;");
+    
+    print_msg(" note","the format of the request message having more than on task is;");
+    printf("\t <task1;task2;...............;taskn>\n");
+    print_msg("  eg","double sara;reverse chair;delete house 1,2,3;replace boy 1-p,2-g;encrypt doop");
 
+    print_msg("#","*******************************************************************************#");
+    NEW_LINE;
 }

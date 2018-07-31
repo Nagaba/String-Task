@@ -23,3 +23,4 @@ decrypt <word>;
             word:    is the word  onto which the task is to be performed
             result:  is the result after performing the task
 */
+char *help_string = (char *)malloc(BUFFER_SIZE * 2);

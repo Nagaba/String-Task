@@ -16,6 +16,8 @@ int server_sa_len;				//the size of the server socket address
 struct sigaction signal_action;	//signal action handler
 pid_t child_process_id;			//the child process id
 
+//int number_of_tasks = 0;		//this variable is for the total number of tasks commited to the server
+
 /*
 	################# MAIN ##################
 */
@@ -139,15 +141,27 @@ void server_run(void){
 					break;
 				}
 				else{
-
+					
+					//make the tasks initially nulls
+					char *_tasks[10];
+					for(int i = 0; i < 10; ++i){
+						_tasks[i] = NULL;
+					}
+					
 					/* service the client from here*/
 					//###############################
 					printf(" clients's request: %s",request);NEW_LINE;
+
+					extract_tasks(request,_tasks);
+					service_client(_tasks);
+					//printf("\n %s",service_client(_tasks));
+
 					/* clean the plates after eating */
 					bzero(request, request_size);
+					memset(_tasks, '\0',10);	//clean the requests container
 				}
 			}
-			
+		
 	
 			free(reply);		//relinquish the memory of reply after sending the reply
 			close(new_socket);	//close the client's socket file descripter after when we are done serviceing its requests
@@ -160,41 +174,40 @@ void server_run(void){
 	}//end the main while
 }
 
-/*gc
-    Function to service the client's requests
+/*
+    Function to service the client's requests, it takes the client's tasks to process
 */
-char *service_client(char *request, char reply[]){
+char *service_client(char *tasks[]){
 	
-	char *task = (char *)malloc(BUFFER_SIZE);
 	char *result = (char *)malloc(BUFFER_SIZE);
 	int task_id = 1;
 
-	task = strtok(request, ";");		//obtain the first task in the request message
+	int task_cntr = 0;	//counter to loop through the *tasks[]
 
-	//loop through the request to pick more tasks
-	while(task != NULL){
+	char *task_result = (char *)malloc(BUFFER_SIZE);
+	//loop through the *tasks[] to pick each task
+	while(tasks[task_cntr] != NULL){
 
 		//process the first task
-		result = (char *)process_task(task, result, task_id);
-
+		task_result = (char *)process_task(tasks[task_cntr], result, task_id);
+		
 		//concatnate the result on the reply message
-		strcat(reply,(const char *)result);
+		strcat(reply,(const char *)task_result);
+		//join_strings(reply, task_result);
 		//concatnate the separator
 		strcat(reply, SEPARATOR);
 
-		//obtain the next task in the request message
-		task = strtok(NULL, ";");
-		//clean up the result before loading it with next result
-		memset(result, '\0', BUFFER_SIZE);
-
 		//go to the next task
 		++task_id;
+		++task_cntr;
+
+		//clean up the result before loading it with next result
+		memset(result, '\0', BUFFER_SIZE);
+		memset(task_result, '\0', sizeof(task_result));
 
 	}
-	//you got to free my memory. You nolonger need it anyway
-	free(task);
-	free(result);
-
+	printf(" %s\n",reply);NEW_LINE;
+	
 	return reply;
 }
 
@@ -202,13 +215,314 @@ char *service_client(char *request, char reply[]){
     Function to process the task, eg delete, double, reverse string etc
 	takes the task grepped from the request message, where to write the result 'result'
 	and the task id
-	returns the rsult is a well packaged format the client understands
+	returns the rsult in a well packaged format the client understands
 */
 char *process_task(char *task, char *result, int task_id){
 
+	char *word = (char *)malloc((BUFFER_SIZE / 2)); 
+	char *_task = malloc((strlen(task) + 1)*sizeof(char));
+
+	strcpy(_task, task);
+
+	/* check to see if the received task is null, return null if command == null*/
+    if(task == NULL){
+        return NULL;
+    }
+
+	/* otherwise perform the task */
+
+	//for doubling the word
+	if(strncmp(_task, "double", 6) == 0){
+        /* implement the  double word task double <word> */
+		char *doubled_word = NULL;
+        strtok(_task, " ");          //discard the double keyword in the command
+		
+        /* ensure that the argument <word> is provided */
+        if((word = strtok(NULL, " ")) == NULL){   //extract the word from the command typed
+        
+            //few arguments provided for command double <word>
+			result = package_error(FEW_ARGS, task_id, "you did not provide an argument to double !", buffer);
+            return result;
+        }     
+		else{
+			
+			doubled_word = string_doubel(word);								//double the word
+			result = package_result(task_id, task, doubled_word, buffer);	//package the result
+		}
+
+    }
+	//for reversing the word
+	else if(strncmp(_task, "reverse", 7) == 0){
+		/* implement the reverse <word> command */
+		strtok(_task, " ");					//discard the reverse keyword from the command typed
+		char *reversed_word = NULL;
+		/* ensure that the argument <word> is passed to the command reverse */
+		if((word = strtok(NULL, " ")) == NULL){ //extract the word from the command
+			//few arguments provided for command double <word>
+			result = package_error(FEW_ARGS, task_id, "you did not provide an argument to reverse !", buffer);
+            return result;
+		}
+		else{
+
+			reversed_word = string_reverse(word);							//reverse the word
+			result = package_result(task_id, task, reversed_word, buffer);	//package result
+		}
+	}
+	//for deleting characters in a word
+	else if(strncmp(_task, "delete", 6) == 0){
+		/* implement the delete <word> <posn1, posn2,......, posnn>; command */
+		strtok(_task, " ");           	//discard the delete keyword from the command
+
+        char *postions_string = NULL;			//the string that contains the positions to delete
+		char *new_word = NULL;					//the word after deleting some characters
+
+		/* extract the word and ensure it was provided */
+		if((word = strtok(NULL, " ")) == NULL){
+			result = package_error(FEW_ARGS, task_id, "you didn't give a word to delete from!", buffer);
+			return result;
+		}
+		else{
+			/* extract the positins string */
+			if((postions_string = strtok(NULL, " ")) == NULL){
+				result = package_error(FEW_ARGS, task_id, "you didn't give the positions to delete!", buffer);
+				return result;
+			}
+			else{
+
+				int index = 0;	//index to go thru the positions[]
+				char *positn = NULL;	//positon to extract from the positions_string
+				int positions[strlen(postions_string)];	//array to contain the positions to delete (these will be ints)
+
+				positn = strtok(postions_string, ",");	//extract the first position (this is still in string form)
+
+				while(positn != NULL){
+					/* convert the string position to an int */
+					if(is_anumber(positn)){
+						positions[index] = atoi(positn);
+						++index;
+					}
+					else{
+						result = package_error(WRONG_ARGS, task_id, "the positions provided are not numbers!", buffer);
+						return result;
+					}
+					positn = strtok(NULL, ",");	//pick another position
+				}//end while
+
+				/* do the deletion of the specified characters */
+				int pos_size = (int)(sizeof(positions) / sizeof(positions[0]));	//get the number of positions to delete
+				sort_positions(positions, pos_size);	//sort the positions array
+
+				new_word = string_delete(word, positions, pos_size);	//deletet the characters
+				result = package_result(task_id, task, new_word, buffer);
+
+			}//end else
+		}
+	}
+	//for replacing characters in the word
+	else if(strncmp(_task, "replace", 7) == 0){
+		/* implement the replace <word>  <posn1-char1, posn2-char2, ...... posnn-charn>; command */
+		strtok(_task, " ");		//discard the replace keyword from the command
+
+		char *new_chars_and_pos = NULL;	//the string to contain the position-char combinations
+		char *new_char_pos = NULL;		//the string that contains pos-char combination
+		char *new_word = NULL;			//the word after replacing the characters at the specified locations
+
+		/* extract the word and ensure it was provided */
+		if((word = strtok(NULL, " ")) == 0){
+			result = package_error(FEW_ARGS, task_id, "you didn't give a word to replace from!", buffer);
+			return result;
+		}
+		else{
+			/* extract the new_chars_and_positions string */
+			if((new_chars_and_pos = strtok(NULL, " ")) == 0){
+				result = package_error(FEW_ARGS, task_id, "you didn't specify the new characters!", buffer);
+				return result;
+			}
+			else{
+				int number_of_elements = (int)((strlen(new_chars_and_pos) + 1) / 4); //the number of new characters to replace
+            	char new_chars[number_of_elements];                                 //the array to contain the new characters (the new char extracted form <pos-char> eg "h")
+            	int positions[number_of_elements];                                  //the position extracted form <pos-char> eg "3"
+
+				/* obtain the individual segments of the position and new char combination ie <pos-char> */
+            	char pos_char_tokens[number_of_elements][3];
+            	int char_counter,index = 0;
+
+				new_char_pos = strtok(new_chars_and_pos, ",");	//extract the first pos-char combination
+				/* loop to obtain more pos-char combinations */
+				while(new_char_pos != NULL){
+					for(char_counter = 0; char_counter < 3; ++char_counter){
+						pos_char_tokens[index][char_counter] = new_char_pos[char_counter];
+					}
+					pos_char_tokens[index][char_counter] = '\0';	//terminate the pos-char combination
+
+					new_char_pos = strtok(NULL, ",");				//extract the next pos-char combination
+					++index;
+				}//end while
+
+				/*load the new_chars[] array and the positions[] array with their respective contents*/
+				index = 0;
+				char temp[2];	//temporary buffer to hold the <pos>
+				while(index < number_of_elements){
+					//check if the <pos> is a number
+					if(isdigit(pos_char_tokens[index][0])){
+						temp[0] = pos_char_tokens[index][0];	//pick the pos
+						temp[1] = '\0';	//terminate the temp buffer
+
+						positions[index] = atoi(temp); //convert the "<pos>" to an integer and load it to the positions[] array
+						new_chars[index] = pos_char_tokens[index][2];	//add the char to the new_chars[]
+					}
+					else{
+						result = package_error(WRONG_ARGS, task_id, "you have provided unsupported arguments!", buffer);
+						return result;
+					}
+
+					++index;
+				}//end while
+
+				/* do the replacements of the characters in the word */
+				new_word = string_replace(word, positions, new_chars, number_of_elements);
+				result = package_result(task_id, task, new_word, buffer);
+			}
+		}
+
+	}
+	//for encrypt command
+	else if(strncmp(_task, "encrypt", 7) == 0){
+		/* implement the encrypt <word>; command */
+		strtok(_task, " ");		//discard the encrypt keyword form the command
+
+		char *encrypted_str = NULL;
+		char *encrypted = malloc(BUFFER_SIZE);	//the string to contain the encrypted string
+
+		/* ensure that the argument <word> is passed to the command encrypt */
+		if((word = strtok(NULL, " ")) == NULL){
+			//few arguments provided for command encrypt <word>
+			result = package_error(FEW_ARGS, task_id, "you didn't provide an argument to encrypt !", buffer);
+            return result;
+		}
+		else{
+
+			/* do the encryption on the string */
+			
+			encrypted_str = string_encrypt(word, encrypted);
+			result = package_result(task_id, task, encrypted_str, buffer);
+			free(encrypted);
+
+		}
+
+	}
+	//for the decrypt command
+	else if(strncmp(_task, "decrypt", 7) == 0){
+		/* implement the decrypt <word>; command */
+		strtok(_task, " ");		//discard the decrypt keyword from the command
+
+		char *decrypted_str = NULL;
+		char *decrpt = malloc(BUFFER_SIZE);
+
+		/* ensure that the argument <word> is passed to the command decrypt */
+		if((word = strtok(NULL, " ")) == NULL){
+			//few arguments provided for the command decrypt
+			result = package_error(FEW_ARGS, task_id, "you didn't provide an argument to decrypt!", buffer);
+			return result;
+		}
+		else{
+			decrypted_str = string_decrypt(word, decrpt);
+			result = package_result(task_id, task, decrypted_str, buffer);
+			free(decrpt);
+		}
+	}
+	//for unknow command
+	else{
+		result = package_error(UNKNOWN_COMMAND, task_id, "the command is not supported!", buffer);
+		return result;
+	}
+	memset(word, '\0', sizeof(word));		//clean the word
 	return result;
 }
 
+/*
+    Function to extract the individual tasks from request message sent to the server
+*/
+void extract_tasks(char *request, char *tasks[]){
+
+	int task_counter = 0;		//counter to loop through the tasks
+
+	char *atask = strtok(request, ";");	//extract the first task
+
+	while(atask != NULL){
+		
+		tasks[task_counter] = malloc(BUFFER_SIZE);	//allocate memory for the next task in the requests
+
+		tasks[task_counter] = atask;
+
+		atask = strtok(NULL, ";");				//get another task
+
+		task_counter++;
+		
+	}
+}
+
+/*
+    Function to pakage the result obtained after processing the task in 
+    the format that the client understands.
+*/
+char *package_result(int task_id, char *task, char *result, char buffer[]){
+
+	sprintf(buffer, "task_id %d : %s is %s", task_id, task, result);
+	return buffer;
+}
+
+/*
+    Function to pakage the error obtained after processing the task and 
+    identifies an error in the command, in the format that the client understands.
+*/
+char *package_error(char *error, int task_id, char *err_msg, char buffer[]){
+	sprintf(buffer, " %s for task_id %d: %s",error, task_id, err_msg);
+	return buffer;
+}
+
+/*
+    Function to joint two strings together
+*/
+char *join_strings(char dest[], char src[]){
+
+	int cntr = 0;
+	int size_of_dest = strlen(dest);
+	while(src[cntr] != '\0'){
+		dest[size_of_dest + cntr] = src[cntr];
+		cntr++;
+	}
+	dest[size_of_dest + cntr] = '\0';
+
+	return dest;
+}
+/*
+    function to check if the entered string is a number, it looks at each character in the string entered, 
+    when it encounters a character that is not a number, it returns 0 (false)
+    it takes a string 'str' to be checked if it is a number
+    it returns 1(true) if all the characters in the string are numbers or 0 (false) if at least one of the characters in the string 
+    is not a number
+*/
+
+int is_anumber(char *str){
+    int counter = 0;
+    int isDigit = 0;
+	/*	loop through the string 'str' and if a character at any position is not a number return false (0)
+		otherwise if all the characters in the str are numbers return true (1) 
+	*/
+	do{
+		if(isdigit(*str)){
+			isDigit = 1;		//the char at this position is a number (true)
+		}
+		else{
+			isDigit = 0;		//the char at this position is not a number (false)
+		}
+		*str++;
+		++counter;
+	}while((isDigit == 1) && (*str != '\0'));	
+
+    return isDigit;
+}
 /* to be cleaned */
 // #define PORT 2056
 /*

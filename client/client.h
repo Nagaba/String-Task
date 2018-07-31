@@ -8,14 +8,29 @@
 #define BUFFER_SIZE 1024        //size of the buffer in bytes
 
 
-
-//function to provide run the main client program 
+/*
+    Function to provide run the main client program 
+*/
 void client_run(const char **args);
 
-//function to prompt the user to enter the string from the terminal
+/*
+    Function to prompt the user to enter the string from the terminal
+*/
 const char *prompt(char buff[]);
-
-//function to interprete the commands typed by the client from the prompt
+/*
+    Function to interprete the commands typed by the client from the prompt
+*/
 void command_interpretor(char *command);
+
+/*
+    Function to print the help menu showing the list of permitted commands 
+    the string Task program can accept
+*/
+void print_help(void);
+
+/*
+    Function to print the reply from the server
+*/
+void print_reply(char *reply);
 
 #endif
