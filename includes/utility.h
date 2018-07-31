@@ -20,13 +20,16 @@
 
 #define DEFAULT_PORT 2054     //the default port onto which bothe the server and the client listen
 
-#define NEW_LINE {printf("\n");}    //printing newline
-#define MESSAGE "MESSAGE"           //message macro
-#define ERROR "ERROR"               //error macro
-#define UNKNOWN_COMMAND "UNKNOWN COMMAND"   //unknown command macro
+#define NEW_LINE {printf("\n");}            //printing newline
+#define SEPARATOR ";"                       //the command separator macro
+
+#define SOCKET_ERROR "SOCKET ERROR"         //the socket error macro
 #define SEND_FAILURE "SEND FAILURE"         //send failure macro
 #define RECV_FAILURE "RECEIVE FAILURE"      //receive failure macro
-#define SEPARATOR ";"                       //the command separator macro
+
+#define MESSAGE "MESSAGE"                   //message macro
+#define ERROR "ERROR"                       //error macro
+#define UNKNOWN_COMMAND "UNKNOWN COMMAND"   //unknown command macro
 #define FEW_ARGS "FEW ARGUMENTS"            //the few arguments macro
 #define WRONG_ARGS "WRONG ARGUMENTS"        //the wrong arguments macro
 
@@ -132,4 +135,6 @@ char *string_encrypt(char *str, char *response);
 */
 char *string_decrypt(char *str, char *response);
 
+/*to be romoved. just for debugging*/
+void debug(void);
 #endif

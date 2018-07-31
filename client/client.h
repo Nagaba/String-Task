@@ -29,7 +29,7 @@ void command_interpretor(char *command);
 void print_help(void);
 
 /*
-    Function to print the reply from the server
+    Function to print the reply from the server to the client's terminal
 */
 void print_reply(char *reply);
 

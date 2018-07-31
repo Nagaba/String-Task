@@ -3,14 +3,16 @@
 */
 #include "client.h"
 
-char buffer[BUFFER_SIZE];       //the buffer onto which to write the request and reply
+char buffer[BUFFER_SIZE];                   //the buffer onto which to write the request
+char *reply = NULL;                                //the buffer onto which to load the reply
 
-SocketAddress client_soc_addr;                  //the socket address of the client
-SocketAddress server_soc_addr;                  //the socket address for the server
 
-int snder_length = sizeof(client_soc_addr);     //the size of the client socket address
-int client_socket;                              //client's socket file descriptor
-const char *terminal_string;                   //string typed at the terminal
+SocketAddress client_soc_addr;             //the socket address of the client
+SocketAddress server_soc_addr;             //the socket address for the server
+
+int snder_length = sizeof(client_soc_addr);  //the size of the client socket address
+int client_socket;                           //client's socket file descriptor
+const char *terminal_string;                //string typed at the terminal
 
 int main(int argc, char const *argv[])
 {
@@ -37,6 +39,7 @@ int main(int argc, char const *argv[])
 //function to  run the main client program 
 void client_run(const char **args){
 
+    reply = malloc(2*BUFFER_SIZE);
     printf(" Initializing String Task client......");
     NEW_LINE;
     /****create the client socket file descriptor */
@@ -97,11 +100,20 @@ void client_run(const char **args){
                 print_msg(SEND_FAILURE, "Failed to send the previous packet to the server");
                 continue;
             }
-            print_msg("SEND SUCCESS", "Message sent to the server");
+            print_msg("SEND SUCCESS", "Task(s) sent to the server");
 
-            //receive
-            //print reply
-
+            /* receive the reply */
+            if(recv(client_socket,reply, sizeof(reply), 0) == -1){
+                print_msg(RECV_FAILURE, "whooops! failed to recive reply from server!");
+                continue;
+            }
+            /* print the reply  */
+            else{
+                print_msg("RESULT", reply);
+                //print_reply(reply);
+            }
+            //memset(reply, '\0', sizeof(reply)); //clean up the house
+            free(reply);
         }
     }
     free((char *)terminal_string);      //free the memory allocated to terminal string
@@ -120,6 +132,27 @@ const char *prompt(char buff[]){
 }
 
 /*
+    Function to print the reply from the server to the client's terminal
+*/
+void print_reply(char *reply){
+    printf("%s \n", reply);
+    char *result = NULL;
+
+    result = strtok(reply, SEPARATOR);      //extract the firts result
+    printf(" %s\n", result);
+    // while(result != NULL){
+    //     print_msg("RESULT", result);
+    //     debug();
+    //     result = strtok(NULL, SEPARATOR);
+    //     debug();
+    // }
+
+    //clean up the result container before loading it again
+    memset(result, '\0', sizeof(result));
+    
+}
+
+/*
     Function to print the help menu showing the list of permitted commands 
     the string Task program can accept
 */
@@ -134,6 +167,8 @@ void print_help(void){
     print_msg(" DECRYPT", "decrypt <word>;");
     print_msg(" DELETE", " delete <word> <posn1, posn2,......, posnn>;");
     print_msg(" REPLACE", "replace <word>  <posn1-char1, posn2-char2,.....,posnn-charn>;");
+    print_msg(" HELP","   help\t\t {to see the help menu}");
+    print_msg(" EXIT", "   exit\t\t {to exit the program}");
     
     print_msg(" note","the format of the request message having more than on task is;");
     printf("\t <task1;task2;...............;taskn>\n");

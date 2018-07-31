@@ -1,5 +1,7 @@
 /*
 	The main server program that implements the functionality of the string task program
+	this server can support a maximum of 10 clients at a time
+	this server can allow a maximum of 10 tasks at a time separated by semicoolonies
 */
 
 #include "server.h"
@@ -132,7 +134,7 @@ void server_run(void){
 			while(true){
 				
 				if(recv(new_socket, request,request_size, 0) == -1){
-					print_msg(RECIEVE_FAILURE, "failed to receive the client's request!");
+					print_msg(RECV_FAILURE, "failed to receive the client's request!");
 					break;	//client left
 				}
 				/* if the client wants to exit*/
@@ -142,19 +144,34 @@ void server_run(void){
 				}
 				else{
 					
-					//make the tasks initially nulls
-					char *_tasks[10];
-					for(int i = 0; i < 10; ++i){
+					/*make the tasks initially nulls */
+					char *_tasks[MAX_TASKS];
+					for(int i = 0; i < MAX_TASKS; ++i){
 						_tasks[i] = NULL;
 					}
-					
+					/* assign priorities to the tasks */
+					//to be done here
+
+					/* save the requests to the busy_list.txt file */
+					//to be done here
+
 					/* service the client from here*/
 					//###############################
 					printf(" clients's request: %s",request);NEW_LINE;
-
+					/* extract the taskes from the request sent by the client */
 					extract_tasks(request,_tasks);
+
+					/* service the client fequests */
 					service_client(_tasks);
-					//printf("\n %s",service_client(_tasks));
+
+					/* send the results back to the client */
+					if(send(new_socket, reply, sizeof(reply), 0) == -1){
+						print_msg(SEND_FAILURE, "failed to send reply to the client!");
+						//continue;	//client left break;
+					}
+					else{
+						print_msg("<<", "reply sent to the client successfully");
+					}
 
 					/* clean the plates after eating */
 					bzero(request, request_size);
@@ -176,6 +193,8 @@ void server_run(void){
 
 /*
     Function to service the client's requests, it takes the client's tasks to process
+	it processes them according to the required format, and also saves the processed 
+	task to the ready_jobs.txt file
 */
 char *service_client(char *tasks[]){
 	
@@ -193,7 +212,7 @@ char *service_client(char *tasks[]){
 		
 		//concatnate the result on the reply message
 		strcat(reply,(const char *)task_result);
-		//join_strings(reply, task_result);
+		
 		//concatnate the separator
 		strcat(reply, SEPARATOR);
 
@@ -206,7 +225,8 @@ char *service_client(char *tasks[]){
 		memset(task_result, '\0', sizeof(task_result));
 
 	}
-	printf(" %s\n",reply);NEW_LINE;
+	printf(" %s\n",reply);NEW_LINE;	//display the results after processing
+	/* save the processed tasks to the ready_jobs.txt file */
 	
 	return reply;
 }

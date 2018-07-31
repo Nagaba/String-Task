@@ -12,9 +12,7 @@
 
 #define BUFFER_SIZE 1024        //size of the buffer in bytes
 #define BACKLOG    10          //the maximum number of clients the server can suppport at a time
-
-#define SOCKET_ERROR "SOCKET ERROR"         //the socket error macro
-#define RECIEVE_FAILURE "RECEIVE FAILURE"   //receive failure macro
+#define MAX_TASKS 10           //the maximum number of tasks the server can accept at a time
 
 
 /* 
@@ -63,8 +61,20 @@ void extract_tasks(char *request, char *tasks[]);
     Function to joint two strings
 */
 char *join_strings(char dest[], char src[]);
-/*to be romoved. just for debugging*/
-void debug(void){
-    print_msg("DEBUG", "failed");
-}
+
+/*
+    Function to write to the file 
+    this function writes the string 'str' to the file specified by the 'file_name'
+    subsequesnt calls to this function write the string to the next line
+    it returns 1 if the file exists and 0 if the file doesnot exist
+*/
+int write_to_txt_file(const char *str, const char *file_name);
+
+/*
+    Function to read the file
+    this function reads a line of string from the file specified by 'file_name'
+    and returns it as 'str'
+*/
+char *read_form_tx_file(char *str, const char *file_name);
+
 #endif

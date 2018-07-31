@@ -351,3 +351,8 @@ char *string_decrypt(char *str, char *response){
 
     return response;
 }
+
+/*to be romoved. just for debugging*/
+void debug(void){
+    print_msg("DEBUG", "failed");
+}
